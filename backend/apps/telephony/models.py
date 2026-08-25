@@ -27,3 +27,29 @@ class RawWebhookEvent(OrganizationOwnedModel):
             )
         ]
         indexes = [models.Index(fields=["organization", "status", "received_at"])]
+
+
+class WebhookEvent(OrganizationOwnedModel):
+    """Provider-agnostic ingestion ledger; adapters are deliberately out of scope."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        PROCESSED = "processed", "Processed"
+        FAILED = "failed", "Failed"
+
+    provider = models.CharField(max_length=50)
+    event_id = models.CharField(max_length=255)
+    event_type = models.CharField(max_length=100, blank=True)
+    payload = models.JSONField(default=dict)
+    received_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    error = models.TextField(blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "provider", "event_id"], name="unique_webhook_event_per_org"
+            )
+        ]
+        indexes = [models.Index(fields=["organization", "status", "received_at"])]
