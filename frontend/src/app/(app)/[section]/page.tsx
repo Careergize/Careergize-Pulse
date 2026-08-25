@@ -1,0 +1,3 @@
+import { notFound } from "next/navigation"; import { EmptyState, PageHeader } from "@/components/page-state";
+const sections:Record<string,string>={calls:"Calls",contacts:"Contacts","follow-ups":"Follow-ups",leads:"Leads",agents:"Agents",teams:"Teams",campaigns:"Campaigns",analytics:"Analytics",reports:"Reports"};
+export default async function SectionPage({params}:{params:Promise<{section:string}>}){const {section}=await params;const title=sections[section];if(!title)notFound();return <><PageHeader title={title} description={`${title} workspace`}/><EmptyState title={`No ${title.toLowerCase()} yet`} body="This area is reserved for a later product phase. No sample data has been created."/></>}

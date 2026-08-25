@@ -20,5 +20,10 @@ class RawWebhookEvent(OrganizationOwnedModel):
     error_code = models.CharField(max_length=100, blank=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["organization", "provider", "provider_event_id"], name="unique_provider_event_per_org")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["organization", "provider", "provider_event_id"],
+                name="unique_provider_event_per_org",
+            )
+        ]
         indexes = [models.Index(fields=["organization", "status", "received_at"])]

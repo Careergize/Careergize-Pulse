@@ -28,4 +28,7 @@ class ReadinessView(APIView):
         except Exception:
             checks["redis"] = "unavailable"
         ready = all(value == "ok" for value in checks.values())
-        return Response({"status": "ok" if ready else "unavailable", "checks": checks}, status=200 if ready else 503)
+        return Response(
+            {"status": "ok" if ready else "unavailable", "checks": checks},
+            status=200 if ready else 503,
+        )
