@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: careergize_pulse
+      POSTGRES_USER: careergize
+      POSTGRES_PASSWORD: careergize
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U careergize -d careergize_pulse"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    env_file: .env
+    command: sh -c "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    env_file: .env
+    command: celery -A config worker --loglevel=INFO
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports: ["3000:3000"]
+    depends_on: [backend]
+
+volumes:
+  postgres_data:
